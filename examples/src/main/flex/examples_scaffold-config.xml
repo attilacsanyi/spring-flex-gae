@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flex-config xmlns="http://www.adobe.com/2006/flex-config">
+	<includes append="true">
+	<symbol>org.flex.examples.presentation.person.PersonView</symbol>
+    </includes>
+</flex-config>

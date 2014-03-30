@@ -1,0 +1,43 @@
+// Need STS 2.3.3.M1
+// Create from 1.1.0M1 roo console
+project --topLevelPackage org.flex.examples --projectName examples --java 6
+persistence setup --provider HIBERNATE --database MYSQL --databaseName examples --userName atka --password atka
+entity --class ~.domain.Person
+field string --fieldName firstName --notNull
+field string --fieldName lastName --notNull
+field number --type java.lang.Integer --fieldName age --notNull --min 1
+flex setup
+flex remoting scaffold --name ~.service.PersonService
+security setup
+perform eclipse
+quit
+
+// Start MySQL database
+
+// Add the following lines to web.xml
+// <listener>
+//	<listener-class>flex.messaging.HttpFlexSession</listener-class>
+// </listener>
+
+
+// Change persistence.xml
+// <property name="hibernate.hbm2ddl.auto" value="update"/>
+
+// Security setup results
+// security setup
+// Managed ROOT\pom.xml
+// Managed ROOT\pom.xml [Added dependency org.springframework.security:spring-security-core:${spring-security.version}]
+// Managed ROOT\pom.xml [Added dependency org.springframework.security:spring-security-config:${spring-security.version}]
+// Managed ROOT\pom.xml [Added dependency org.springframework.security:spring-security-web:${spring-security.version}]
+// Managed ROOT\pom.xml [Added dependency org.springframework.security:spring-security-taglibs:${spring-security.version}]
+// Created SRC_MAIN_RESOURCES\META-INF\spring\applicationContext-security.xml
+// Created SRC_MAIN_WEBAPP\WEB-INF\views
+// Created SRC_MAIN_WEBAPP\WEB-INF\views\login.jspx
+// Managed SRC_MAIN_WEBAPP\WEB-INF\web.xml
+// Managed SRC_MAIN_WEBAPP\WEB-INF\spring\webmvc-config.xml
+
+// Import as an existing project
+
+
+
+

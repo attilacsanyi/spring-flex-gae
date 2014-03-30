@@ -1,0 +1,16 @@
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2011-01-22 22:49:51
+project --topLevelPackage com.flexgae --projectName flexgae --java 6
+persistence setup --provider HIBERNATE --database MYSQL --databaseName flexgae --userName atka --password atka
+entity --class ~.entity.UserEntity --table user
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username
+field string --fieldName password --notNull --sizeMin 2 --column password
+field number --fieldName age --type java.lang.Integer --notNull --sizeMin 10 --sizeMax 99 --column age
+field boolean --fieldName sex --notNull --column sex
+flex setup
+flex remoting scaffold --name ~.service.UserService --entity ~.entity.UserEntity
+perform eclipse
+quit
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2011-01-22 22:50:11
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2011-01-22 22:50:11
+// script --file create_flexgae.roo
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2011-01-22 22:50:11

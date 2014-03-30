@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="loginEntityView_creationCompleteHandler(event)" height="100%" title="LoginEntity List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.base.entity.LoginEntity;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function loginEntityView_creationCompleteHandler(event:FlexEvent):void
+			{
+				loginEntityService.list();
+			}
+			
+			protected function loginEntityView_loginEntityCreateEventHandler(event:LoginEntityEvent):void
+			{
+				loginEntityService.create(event.loginEntity);
+				showProgressBar();
+			}
+			
+			protected function loginEntityView_loginEntityUpdateEventHandler(event:LoginEntityEvent):void
+			{
+				loginEntityService.update(event.loginEntity);
+				showProgressBar();
+			}
+			
+			private function showForm(loginEntity:LoginEntity = null):void 
+			{
+				var form:LoginEntityForm = PopUpManager.createPopUp(this, LoginEntityForm, true) as LoginEntityForm;
+				form.remotingChannels = remotingChannels;
+				form.loginEntity = loginEntity != null ? loginEntity : new LoginEntity();
+				form.addEventListener(LoginEntityEvent.CREATE, loginEntityView_loginEntityCreateEventHandler);
+				form.addEventListener(LoginEntityEvent.UPDATE, loginEntityView_loginEntityUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function loginEntityService_createResultHandler(event:ResultEvent):void
+			{
+				var createdLoginEntity:LoginEntity = event.result as LoginEntity;
+				var people:ArrayCollection = loginEntityGrid.dataProvider as ArrayCollection;
+				people.addItem(createdLoginEntity);
+				closeProgressBar();
+			}
+			
+			protected function loginEntityService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedLoginEntity:LoginEntity = event.result as LoginEntity;
+				var people:ArrayCollection = loginEntityGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var loginEntity:LoginEntity = people.getItemAt(i) as LoginEntity;
+					if (loginEntity.id == updatedLoginEntity.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedLoginEntity, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function loginEntityService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = loginEntityGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(loginEntityGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function loginEntityService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editLoginEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (loginEntityGrid.selectedIndex > -1) {
+					var selectedLoginEntity:LoginEntity = loginEntityGrid.selectedItem as LoginEntity;
+					showForm(selectedLoginEntity);
+				}
+			}
+
+			protected function deleteLoginEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (loginEntityGrid.selectedIndex > -1) {
+					var selectedLoginEntity:LoginEntity = loginEntityGrid.selectedItem as LoginEntity;
+					showProgressBar();
+					loginEntityService.remove(selectedLoginEntity.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="loginEntityService" fault="loginEntityService_faultHandler(event)" id="loginEntityService">
+			<s:method name="create" result="loginEntityService_createResultHandler(event)"/>
+			<s:method name="update" result="loginEntityService_updateResultHandler(event)"/>
+			<s:method name="remove" result="loginEntityService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newLoginEntityBtn" label="New LoginEntity"/>
+	
+	<mx:DataGrid dataProvider="{loginEntityService.list.lastResult}" height="80%" id="loginEntityGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="password" headerText="Password" id="passwordColumn"/>
+            <mx:DataGridColumn dataField="username" headerText="Username" id="usernameColumn"/>
+            <mx:DataGridColumn dataField="accountNonExpired" headerText="Account Non Expired" id="accountNonExpiredColumn"/>
+            <mx:DataGridColumn dataField="accountNonLocked" headerText="Account Non Locked" id="accountNonLockedColumn"/>
+            <mx:DataGridColumn dataField="credentialsNonExpired" headerText="Credentials Non Expired" id="credentialsNonExpiredColumn"/>
+            <mx:DataGridColumn dataField="enabled" headerText="Enabled" id="enabledColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editLoginEntityBtn_clickHandler(event)" id="editLoginEntityBtn" label="Edit"/>
+		<s:Button click="deleteLoginEntityBtn_clickHandler(event)" id="deleteLoginEntityBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

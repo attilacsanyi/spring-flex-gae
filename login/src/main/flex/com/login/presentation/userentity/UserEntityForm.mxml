@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="userEntityForm_creationCompleteHandler(event)" height="300" title="UserEntity Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import com.login.entity.UserEntity;
+            
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var userEntity:UserEntity;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new UserEntityEvent(((!userEntity.id || userEntity.id <= 0) ? UserEntityEvent.CREATE : UserEntityEvent.UPDATE), userEntity));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                userEntity.password = passwordInput.text;
+                userEntity.username = usernameInput.text;
+                userEntity.accountNonExpired = accountNonExpiredInput.selected;
+
+                userEntity.accountNonLocked = accountNonLockedInput.selected;
+
+                userEntity.credentialsNonExpired = credentialsNonExpiredInput.selected;
+
+                userEntity.enabled = enabledInput.selected;
+
+
+                return true;
+            }
+            
+            protected function userEntityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="passwordValidator" minLength="2" property="text" required="true" source="{passwordInput}"/>
+            <mx:StringValidator id="usernameValidator" maxLength="20" minLength="2" property="text" required="true" source="{usernameInput}"/>
+            <mx:StringValidator id="accountNonExpiredValidator" property="text" required="true" source="{accountNonExpiredInput}"/>
+            <mx:StringValidator id="accountNonLockedValidator" property="text" required="true" source="{accountNonLockedInput}"/>
+            <mx:StringValidator id="credentialsNonExpiredValidator" property="text" required="true" source="{credentialsNonExpiredInput}"/>
+            <mx:StringValidator id="enabledValidator" property="text" required="true" source="{enabledInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="userEntityForm">
+        <mx:FormItem id="passwordField" label="Password">
+        	<s:TextInput id="passwordInput" text="{userEntity.password}"/>
+        </mx:FormItem>
+        <mx:FormItem id="usernameField" label="Username">
+        	<s:TextInput id="usernameInput" text="{userEntity.username}"/>
+        </mx:FormItem>
+        <mx:FormItem id="accountNonExpiredField" label="Account Non Expired">
+        	<s:CheckBox id="accountNonExpiredInput" selected="{userEntity.accountNonExpired}"/>
+        </mx:FormItem>
+        <mx:FormItem id="accountNonLockedField" label="Account Non Locked">
+        	<s:CheckBox id="accountNonLockedInput" selected="{userEntity.accountNonLocked}"/>
+        </mx:FormItem>
+        <mx:FormItem id="credentialsNonExpiredField" label="Credentials Non Expired">
+        	<s:CheckBox id="credentialsNonExpiredInput" selected="{userEntity.credentialsNonExpired}"/>
+        </mx:FormItem>
+        <mx:FormItem id="enabledField" label="Enabled">
+        	<s:CheckBox id="enabledInput" selected="{userEntity.enabled}"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

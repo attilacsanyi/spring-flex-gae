@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="personView_creationCompleteHandler(event)" height="100%" title="Person List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.examples.domain.Person;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function personView_creationCompleteHandler(event:FlexEvent):void
+			{
+				personService.list();
+			}
+			
+			protected function personView_personCreateEventHandler(event:PersonEvent):void
+			{
+				personService.create(event.person);
+				showProgressBar();
+			}
+			
+			protected function personView_personUpdateEventHandler(event:PersonEvent):void
+			{
+				personService.update(event.person);
+				showProgressBar();
+			}
+			
+			private function showForm(person:Person = null):void 
+			{
+				var form:PersonForm = PopUpManager.createPopUp(this, PersonForm, true) as PersonForm;
+				form.remotingChannels = remotingChannels;
+				form.person = person != null ? person : new Person();
+				form.addEventListener(PersonEvent.CREATE, personView_personCreateEventHandler);
+				form.addEventListener(PersonEvent.UPDATE, personView_personUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function personService_createResultHandler(event:ResultEvent):void
+			{
+				var createdPerson:Person = event.result as Person;
+				var people:ArrayCollection = personGrid.dataProvider as ArrayCollection;
+				people.addItem(createdPerson);
+				closeProgressBar();
+			}
+			
+			protected function personService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedPerson:Person = event.result as Person;
+				var people:ArrayCollection = personGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var person:Person = people.getItemAt(i) as Person;
+					if (person.id == updatedPerson.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedPerson, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function personService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = personGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(personGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function personService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editPersonBtn_clickHandler(event:MouseEvent):void
+			{
+				if (personGrid.selectedIndex > -1) {
+					var selectedPerson:Person = personGrid.selectedItem as Person;
+					showForm(selectedPerson);
+				}
+			}
+
+			protected function deletePersonBtn_clickHandler(event:MouseEvent):void
+			{
+				if (personGrid.selectedIndex > -1) {
+					var selectedPerson:Person = personGrid.selectedItem as Person;
+					showProgressBar();
+					personService.remove(selectedPerson.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="personService" fault="personService_faultHandler(event)" id="personService">
+			<s:method name="create" result="personService_createResultHandler(event)"/>
+			<s:method name="update" result="personService_updateResultHandler(event)"/>
+			<s:method name="remove" result="personService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newPersonBtn" label="New Person"/>
+	
+	<mx:DataGrid dataProvider="{personService.list.lastResult}" height="80%" id="personGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="firstName" headerText="First Name" id="firstNameColumn"/>
+            <mx:DataGridColumn dataField="lastName" headerText="Last Name" id="lastNameColumn"/>
+            <mx:DataGridColumn dataField="age" headerText="Age" id="ageColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editPersonBtn_clickHandler(event)" id="editPersonBtn" label="Edit"/>
+		<s:Button click="deletePersonBtn_clickHandler(event)" id="deletePersonBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

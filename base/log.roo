@@ -1,0 +1,31 @@
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2010-11-25 00:13:23
+project --topLevelPackage org.flex.base --projectName base --java 6
+persistence setup --provider HIBERNATE --database MYSQL --databaseName base --userName atka --password atka
+entity --class ~.entity.RoleEntity --serializable --table role
+field string --fieldName name --notNull --sizeMin 4 --column name --comment "Name of the role."
+field string --fieldName description --notNull --column description --comment "Description of the role"
+entity --class ~.entity.UserInfoEntity --serializable --table userinfo
+field string --fieldName firstname --notNull --sizeMin 2 --sizeMax 20 --column firstname --comment "The first name of the user."
+field string --fieldName lastname --notNull --sizeMin 2 --sizeMax 20 --column lastname --comment "The last name of the user."
+field number --fieldName age --type java.lang.Integer --notNull --sizeMin 1 --sizeMax 100 --column AGE --comment "The age of the user."
+entity --class ~.entity.LoginEntity --serializable --table login
+field set --fieldName roles --element ~.entity.RoleEntity --cardinality ONE_TO_MANY --fetch EAGER --comment "The user roles."
+field string --fieldName password --notNull --sizeMin 2 --column password --comment "Returns the password used to authenticate the user."
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username --comment "Returns the username used to authenticate the user."
+field boolean --fieldName accountNonExpired --notNull --column account_non_expired --comment "Indicates whether the user's account has expired. An expired account cannot be authenticated."
+field boolean --fieldName accountNonLocked --notNull --column account_non_locked --comment "Indicates whether the user is locked or unlocked. A locked user cannot be authenticated."
+field boolean --fieldName credentialsNonExpired --notNull --column credentials_non_expired --comment "Indicates whether the user's credentials (password) has expired. Expired credentials prevent authentication."
+field boolean --fieldName enabled --notNull --column enabled --comment "Indicates whether the user is enabled or disabled. A disabled user cannot be authenticated."
+field reference --fieldName userInfo --type ~.entity.UserInfoEntity --cardinality ONE_TO_ONE --fetch LAZY --comment "The user info."
+field reference --class ~.entity.UserInfoEntity --fieldName login --type ~.entity.LoginEntity --cardinality ONE_TO_ONE --comment "The login."
+flex setup
+flex remoting scaffold --name ~.service.RoleEntityService --entity ~.entity.RoleEntity
+flex remoting scaffold --name ~.service.UserInfoEntityService --entity ~.entity.UserInfoEntity
+flex remoting scaffold --name ~.service.LoginEntityService --entity ~.entity.LoginEntity
+security setup
+perform eclipse
+quit
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2010-11-25 00:15:25
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2010-11-25 00:15:25
+// script --file create_base.roo
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2010-11-25 00:15:25

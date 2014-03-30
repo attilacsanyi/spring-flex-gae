@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="userInfoEntityView_creationCompleteHandler(event)" height="100%" title="UserInfoEntity List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.base.entity.UserInfoEntity;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function userInfoEntityView_creationCompleteHandler(event:FlexEvent):void
+			{
+				userInfoEntityService.list();
+			}
+			
+			protected function userInfoEntityView_userInfoEntityCreateEventHandler(event:UserInfoEntityEvent):void
+			{
+				userInfoEntityService.create(event.userInfoEntity);
+				showProgressBar();
+			}
+			
+			protected function userInfoEntityView_userInfoEntityUpdateEventHandler(event:UserInfoEntityEvent):void
+			{
+				userInfoEntityService.update(event.userInfoEntity);
+				showProgressBar();
+			}
+			
+			private function showForm(userInfoEntity:UserInfoEntity = null):void 
+			{
+				var form:UserInfoEntityForm = PopUpManager.createPopUp(this, UserInfoEntityForm, true) as UserInfoEntityForm;
+				form.remotingChannels = remotingChannels;
+				form.userInfoEntity = userInfoEntity != null ? userInfoEntity : new UserInfoEntity();
+				form.addEventListener(UserInfoEntityEvent.CREATE, userInfoEntityView_userInfoEntityCreateEventHandler);
+				form.addEventListener(UserInfoEntityEvent.UPDATE, userInfoEntityView_userInfoEntityUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function userInfoEntityService_createResultHandler(event:ResultEvent):void
+			{
+				var createdUserInfoEntity:UserInfoEntity = event.result as UserInfoEntity;
+				var people:ArrayCollection = userInfoEntityGrid.dataProvider as ArrayCollection;
+				people.addItem(createdUserInfoEntity);
+				closeProgressBar();
+			}
+			
+			protected function userInfoEntityService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedUserInfoEntity:UserInfoEntity = event.result as UserInfoEntity;
+				var people:ArrayCollection = userInfoEntityGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var userInfoEntity:UserInfoEntity = people.getItemAt(i) as UserInfoEntity;
+					if (userInfoEntity.id == updatedUserInfoEntity.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedUserInfoEntity, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function userInfoEntityService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = userInfoEntityGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(userInfoEntityGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function userInfoEntityService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editUserInfoEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (userInfoEntityGrid.selectedIndex > -1) {
+					var selectedUserInfoEntity:UserInfoEntity = userInfoEntityGrid.selectedItem as UserInfoEntity;
+					showForm(selectedUserInfoEntity);
+				}
+			}
+
+			protected function deleteUserInfoEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (userInfoEntityGrid.selectedIndex > -1) {
+					var selectedUserInfoEntity:UserInfoEntity = userInfoEntityGrid.selectedItem as UserInfoEntity;
+					showProgressBar();
+					userInfoEntityService.remove(selectedUserInfoEntity.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="userInfoEntityService" fault="userInfoEntityService_faultHandler(event)" id="userInfoEntityService">
+			<s:method name="create" result="userInfoEntityService_createResultHandler(event)"/>
+			<s:method name="update" result="userInfoEntityService_updateResultHandler(event)"/>
+			<s:method name="remove" result="userInfoEntityService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newUserInfoEntityBtn" label="New UserInfoEntity"/>
+	
+	<mx:DataGrid dataProvider="{userInfoEntityService.list.lastResult}" height="80%" id="userInfoEntityGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="firstname" headerText="Firstname" id="firstnameColumn"/>
+            <mx:DataGridColumn dataField="lastname" headerText="Lastname" id="lastnameColumn"/>
+            <mx:DataGridColumn dataField="age" headerText="Age" id="ageColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editUserInfoEntityBtn_clickHandler(event)" id="editUserInfoEntityBtn" label="Edit"/>
+		<s:Button click="deleteUserInfoEntityBtn_clickHandler(event)" id="deleteUserInfoEntityBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

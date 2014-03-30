@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="personForm_creationCompleteHandler(event)" height="300" title="Person Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import org.flex.examples.domain.Person;
+            
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var person:Person;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new PersonEvent(((!person.id || person.id <= 0) ? PersonEvent.CREATE : PersonEvent.UPDATE), person));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                person.firstName = firstNameInput.text;
+                person.lastName = lastNameInput.text;
+                person.age = parseInt(ageInput.text);
+
+
+                return true;
+            }
+            
+            protected function personForm_creationCompleteHandler(event:FlexEvent):void
+            {
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="firstNameValidator" property="text" required="true" source="{firstNameInput}"/>
+            <mx:StringValidator id="lastNameValidator" property="text" required="true" source="{lastNameInput}"/>
+            <mx:NumberValidator id="ageValidator" minValue="1" property="text" required="true" source="{ageInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="personForm">
+        <mx:FormItem id="firstNameField" label="First Name">
+        	<s:TextInput id="firstNameInput" text="{person.firstName}"/>
+        </mx:FormItem>
+        <mx:FormItem id="lastNameField" label="Last Name">
+        	<s:TextInput id="lastNameInput" text="{person.lastName}"/>
+        </mx:FormItem>
+        <mx:FormItem id="ageField" label="Age">
+        	<s:TextInput id="ageInput" text="{person.age}"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

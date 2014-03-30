@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="roleEntityView_creationCompleteHandler(event)" height="100%" title="RoleEntity List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.base.entity.RoleEntity;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function roleEntityView_creationCompleteHandler(event:FlexEvent):void
+			{
+				roleEntityService.list();
+			}
+			
+			protected function roleEntityView_roleEntityCreateEventHandler(event:RoleEntityEvent):void
+			{
+				roleEntityService.create(event.roleEntity);
+				showProgressBar();
+			}
+			
+			protected function roleEntityView_roleEntityUpdateEventHandler(event:RoleEntityEvent):void
+			{
+				roleEntityService.update(event.roleEntity);
+				showProgressBar();
+			}
+			
+			private function showForm(roleEntity:RoleEntity = null):void 
+			{
+				var form:RoleEntityForm = PopUpManager.createPopUp(this, RoleEntityForm, true) as RoleEntityForm;
+				form.remotingChannels = remotingChannels;
+				form.roleEntity = roleEntity != null ? roleEntity : new RoleEntity();
+				form.addEventListener(RoleEntityEvent.CREATE, roleEntityView_roleEntityCreateEventHandler);
+				form.addEventListener(RoleEntityEvent.UPDATE, roleEntityView_roleEntityUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function roleEntityService_createResultHandler(event:ResultEvent):void
+			{
+				var createdRoleEntity:RoleEntity = event.result as RoleEntity;
+				var people:ArrayCollection = roleEntityGrid.dataProvider as ArrayCollection;
+				people.addItem(createdRoleEntity);
+				closeProgressBar();
+			}
+			
+			protected function roleEntityService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedRoleEntity:RoleEntity = event.result as RoleEntity;
+				var people:ArrayCollection = roleEntityGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var roleEntity:RoleEntity = people.getItemAt(i) as RoleEntity;
+					if (roleEntity.id == updatedRoleEntity.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedRoleEntity, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function roleEntityService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = roleEntityGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(roleEntityGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function roleEntityService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editRoleEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (roleEntityGrid.selectedIndex > -1) {
+					var selectedRoleEntity:RoleEntity = roleEntityGrid.selectedItem as RoleEntity;
+					showForm(selectedRoleEntity);
+				}
+			}
+
+			protected function deleteRoleEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (roleEntityGrid.selectedIndex > -1) {
+					var selectedRoleEntity:RoleEntity = roleEntityGrid.selectedItem as RoleEntity;
+					showProgressBar();
+					roleEntityService.remove(selectedRoleEntity.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="roleEntityService" fault="roleEntityService_faultHandler(event)" id="roleEntityService">
+			<s:method name="create" result="roleEntityService_createResultHandler(event)"/>
+			<s:method name="update" result="roleEntityService_updateResultHandler(event)"/>
+			<s:method name="remove" result="roleEntityService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newRoleEntityBtn" label="New RoleEntity"/>
+	
+	<mx:DataGrid dataProvider="{roleEntityService.list.lastResult}" height="80%" id="roleEntityGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="name" headerText="Name" id="nameColumn"/>
+            <mx:DataGridColumn dataField="description" headerText="Description" id="descriptionColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editRoleEntityBtn_clickHandler(event)" id="editRoleEntityBtn" label="Edit"/>
+		<s:Button click="deleteRoleEntityBtn_clickHandler(event)" id="deleteRoleEntityBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="userEntityForm_creationCompleteHandler(event)" height="300" title="UserEntity Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import com.flexgae.entity.UserEntity;
+            
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var userEntity:UserEntity;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new UserEntityEvent(((!userEntity.id || userEntity.id <= 0) ? UserEntityEvent.CREATE : UserEntityEvent.UPDATE), userEntity));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                userEntity.username = usernameInput.text;
+                userEntity.password = passwordInput.text;
+                userEntity.age = parseInt(ageInput.text);
+
+                userEntity.sex = sexInput.selected;
+
+
+                return true;
+            }
+            
+            protected function userEntityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="usernameValidator" maxLength="20" minLength="2" property="text" required="true" source="{usernameInput}"/>
+            <mx:StringValidator id="passwordValidator" minLength="2" property="text" required="true" source="{passwordInput}"/>
+            <mx:NumberValidator id="ageValidator" property="text" required="true" source="{ageInput}"/>
+            <mx:StringValidator id="sexValidator" property="text" required="true" source="{sexInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="userEntityForm">
+        <mx:FormItem id="usernameField" label="Username">
+        	<s:TextInput id="usernameInput" text="{userEntity.username}"/>
+        </mx:FormItem>
+        <mx:FormItem id="passwordField" label="Password">
+        	<s:TextInput id="passwordInput" text="{userEntity.password}"/>
+        </mx:FormItem>
+        <mx:FormItem id="ageField" label="Age">
+        	<s:TextInput id="ageInput" text="{userEntity.age}"/>
+        </mx:FormItem>
+        <mx:FormItem id="sexField" label="Sex">
+        	<s:CheckBox id="sexInput" selected="{userEntity.sex}"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

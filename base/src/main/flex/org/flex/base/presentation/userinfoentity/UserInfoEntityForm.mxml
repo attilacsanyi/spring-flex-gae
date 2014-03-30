@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="userInfoEntityForm_creationCompleteHandler(event)" height="300" title="UserInfoEntity Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import org.flex.base.entity.UserInfoEntity;
+            
+            import org.flex.base.entity.LoginEntity;
+
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var userInfoEntity:UserInfoEntity;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new UserInfoEntityEvent(((!userInfoEntity.id || userInfoEntity.id <= 0) ? UserInfoEntityEvent.CREATE : UserInfoEntityEvent.UPDATE), userInfoEntity));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                userInfoEntity.firstname = firstnameInput.text;
+                userInfoEntity.lastname = lastnameInput.text;
+                userInfoEntity.age = parseInt(ageInput.text);
+
+                userInfoEntity.login = loginInput.selectedItem;
+
+                return true;
+            }
+            
+            protected function userInfoEntityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+                loginEntityService.list();
+
+            }
+            
+            protected function loginEntityService_faultHandler(event:FaultEvent):void
+            {
+                Alert.show(event.fault.faultString, "Remote Operation Failed");
+            }
+
+            protected function loginEntityService_listResultHandler(event:ResultEvent):void
+            {
+                loginInput.dataProvider = event.result as ArrayCollection;
+                selectLogin();
+            }
+
+            private function selectLogin():void {
+            	if (userInfoEntity.login == null) {
+            		return;
+            	}
+            	for each(var loginEntityItem:LoginEntity in loginInput.dataProvider) {
+            		if (userInfoEntity.login.id == loginEntityItem.id) {
+            			loginInput.selectedItem = loginEntityItem;
+            			return;
+            		}
+            	}
+            }
+
+
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+    	<s:RemoteObject channelSet="{remotingChannels}" destination="loginEntityService" fault="loginEntityService_faultHandler(event)" id="loginEntityService">
+    	    <s:method name="list" result="loginEntityService_listResultHandler(event)"/>
+    	</s:RemoteObject>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="firstnameValidator" maxLength="20" minLength="2" property="text" required="true" source="{firstnameInput}"/>
+            <mx:StringValidator id="lastnameValidator" maxLength="20" minLength="2" property="text" required="true" source="{lastnameInput}"/>
+            <mx:NumberValidator id="ageValidator" property="text" required="true" source="{ageInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="userInfoEntityForm">
+        <mx:FormItem id="firstnameField" label="Firstname">
+        	<s:TextInput id="firstnameInput" text="{userInfoEntity.firstname}"/>
+        </mx:FormItem>
+        <mx:FormItem id="lastnameField" label="Lastname">
+        	<s:TextInput id="lastnameInput" text="{userInfoEntity.lastname}"/>
+        </mx:FormItem>
+        <mx:FormItem id="ageField" label="Age">
+        	<s:TextInput id="ageInput" text="{userInfoEntity.age}"/>
+        </mx:FormItem>
+        <mx:FormItem id="loginField" label="Login">
+        	<s:DropDownList id="loginInput" labelField="password"/>	</mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="authorityEntityView_creationCompleteHandler(event)" height="100%" title="AuthorityEntity List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import com.login.entity.AuthorityEntity;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function authorityEntityView_creationCompleteHandler(event:FlexEvent):void
+			{
+				authorityEntityService.list();
+			}
+			
+			protected function authorityEntityView_authorityEntityCreateEventHandler(event:AuthorityEntityEvent):void
+			{
+				authorityEntityService.create(event.authorityEntity);
+				showProgressBar();
+			}
+			
+			protected function authorityEntityView_authorityEntityUpdateEventHandler(event:AuthorityEntityEvent):void
+			{
+				authorityEntityService.update(event.authorityEntity);
+				showProgressBar();
+			}
+			
+			private function showForm(authorityEntity:AuthorityEntity = null):void 
+			{
+				var form:AuthorityEntityForm = PopUpManager.createPopUp(this, AuthorityEntityForm, true) as AuthorityEntityForm;
+				form.remotingChannels = remotingChannels;
+				form.authorityEntity = authorityEntity != null ? authorityEntity : new AuthorityEntity();
+				form.addEventListener(AuthorityEntityEvent.CREATE, authorityEntityView_authorityEntityCreateEventHandler);
+				form.addEventListener(AuthorityEntityEvent.UPDATE, authorityEntityView_authorityEntityUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function authorityEntityService_createResultHandler(event:ResultEvent):void
+			{
+				var createdAuthorityEntity:AuthorityEntity = event.result as AuthorityEntity;
+				var people:ArrayCollection = authorityEntityGrid.dataProvider as ArrayCollection;
+				people.addItem(createdAuthorityEntity);
+				closeProgressBar();
+			}
+			
+			protected function authorityEntityService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedAuthorityEntity:AuthorityEntity = event.result as AuthorityEntity;
+				var people:ArrayCollection = authorityEntityGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var authorityEntity:AuthorityEntity = people.getItemAt(i) as AuthorityEntity;
+					if (authorityEntity.id == updatedAuthorityEntity.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedAuthorityEntity, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function authorityEntityService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = authorityEntityGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(authorityEntityGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function authorityEntityService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editAuthorityEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (authorityEntityGrid.selectedIndex > -1) {
+					var selectedAuthorityEntity:AuthorityEntity = authorityEntityGrid.selectedItem as AuthorityEntity;
+					showForm(selectedAuthorityEntity);
+				}
+			}
+
+			protected function deleteAuthorityEntityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (authorityEntityGrid.selectedIndex > -1) {
+					var selectedAuthorityEntity:AuthorityEntity = authorityEntityGrid.selectedItem as AuthorityEntity;
+					showProgressBar();
+					authorityEntityService.remove(selectedAuthorityEntity.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="authorityEntityService" fault="authorityEntityService_faultHandler(event)" id="authorityEntityService">
+			<s:method name="create" result="authorityEntityService_createResultHandler(event)"/>
+			<s:method name="update" result="authorityEntityService_updateResultHandler(event)"/>
+			<s:method name="remove" result="authorityEntityService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newAuthorityEntityBtn" label="New AuthorityEntity"/>
+	
+	<mx:DataGrid dataProvider="{authorityEntityService.list.lastResult}" height="80%" id="authorityEntityGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="name" headerText="Name" id="nameColumn"/>
+            <mx:DataGridColumn dataField="description" headerText="Description" id="descriptionColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editAuthorityEntityBtn_clickHandler(event)" id="editAuthorityEntityBtn" label="Edit"/>
+		<s:Button click="deleteAuthorityEntityBtn_clickHandler(event)" id="deleteAuthorityEntityBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

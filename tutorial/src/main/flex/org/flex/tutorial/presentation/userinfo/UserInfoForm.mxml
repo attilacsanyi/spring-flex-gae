@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="userInfoForm_creationCompleteHandler(event)" height="300" title="UserInfo Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import org.flex.tutorial.domain.model.UserInfo;
+            
+            import org.flex.tutorial.domain.auth.UserDetails;
+
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var userInfo:UserInfo;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new UserInfoEvent(((!userInfo.id || userInfo.id <= 0) ? UserInfoEvent.CREATE : UserInfoEvent.UPDATE), userInfo));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                userInfo.firstname = firstnameInput.text;
+                userInfo.lastname = lastnameInput.text;
+                userInfo.age = parseInt(ageInput.text);
+
+                userInfo.userDetails = userDetailsInput.selectedItem;
+
+                return true;
+            }
+            
+            protected function userInfoForm_creationCompleteHandler(event:FlexEvent):void
+            {
+                userDetailsService.list();
+
+            }
+            
+            protected function userDetailsService_faultHandler(event:FaultEvent):void
+            {
+                Alert.show(event.fault.faultString, "Remote Operation Failed");
+            }
+
+            protected function userDetailsService_listResultHandler(event:ResultEvent):void
+            {
+                userDetailsInput.dataProvider = event.result as ArrayCollection;
+                selectUserDetails();
+            }
+
+            private function selectUserDetails():void {
+            	if (userInfo.userDetails == null) {
+            		return;
+            	}
+            	for each(var userDetailsItem:UserDetails in userDetailsInput.dataProvider) {
+            		if (userInfo.userDetails.id == userDetailsItem.id) {
+            			userDetailsInput.selectedItem = userDetailsItem;
+            			return;
+            		}
+            	}
+            }
+
+
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+    	<s:RemoteObject channelSet="{remotingChannels}" destination="userDetailsService" fault="userDetailsService_faultHandler(event)" id="userDetailsService">
+    	    <s:method name="list" result="userDetailsService_listResultHandler(event)"/>
+    	</s:RemoteObject>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="firstnameValidator" maxLength="20" minLength="2" property="text" required="true" source="{firstnameInput}"/>
+            <mx:StringValidator id="lastnameValidator" maxLength="20" minLength="2" property="text" required="true" source="{lastnameInput}"/>
+            <mx:NumberValidator id="ageValidator" property="text" required="true" source="{ageInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="userInfoForm">
+        <mx:FormItem id="firstnameField" label="Firstname">
+        	<s:TextInput id="firstnameInput" text="{userInfo.firstname}"/>
+        </mx:FormItem>
+        <mx:FormItem id="lastnameField" label="Lastname">
+        	<s:TextInput id="lastnameInput" text="{userInfo.lastname}"/>
+        </mx:FormItem>
+        <mx:FormItem id="ageField" label="Age">
+        	<s:TextInput id="ageInput" text="{userInfo.age}"/>
+        </mx:FormItem>
+        <mx:FormItem id="userDetailsField" label="User Details">
+        	<s:DropDownList id="userDetailsInput" labelField="password"/>	</mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

@@ -1,0 +1,30 @@
+// Create flexgae project
+project --topLevelPackage com.gae --projectName gae --java 6
+
+// Create Hibernate database configuration with MySQL dialect
+persistence setup --provider DATANUCLEUS --database GOOGLE_APP_ENGINE
+
+// Create user entity for storing users and implements springframework.UserDetails interface
+entity --class ~.entity.UserEntity --table user
+field string --fieldName username --notNull --column username
+field string --fieldName password --notNull --column password
+field number --fieldName age --type java.lang.Integer --notNull --column age
+field boolean --fieldName sex --notNull --column sex
+
+flex setup
+flex remoting scaffold --name ~.service.UserService --entity ~.entity.UserEntity
+
+//security setup
+perform eclipse
+quit
+
+/*
+
+- Import as an existing eclipse project
+	
+- Add the following lines to web.xml
+	<listener>
+		<listener-class>flex.messaging.HttpFlexSession</listener-class>
+	</listener>
+ 
+*/

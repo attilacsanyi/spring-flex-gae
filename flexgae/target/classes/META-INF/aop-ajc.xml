@@ -1,0 +1,10 @@
+<aspectj>
+<aspects>
+<aspect name="com.flexgae.entity.UserEntity_Roo_Configurable"/>
+<aspect name="com.flexgae.service.UserService_Roo_Service"/>
+<aspect name="com.flexgae.entity.UserEntity_Roo_Entity"/>
+<aspect name="com.flexgae.entity.UserEntity_Roo_ToString"/>
+<aspect name="com.flexgae.entity.UserEntity_Roo_JavaBean"/>
+</aspects>
+</aspectj>
+

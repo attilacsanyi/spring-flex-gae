@@ -1,0 +1,43 @@
+// Create flexgae project
+project --topLevelPackage com.flexgae --projectName flexgae --java 6
+
+// Create Hibernate database configuration with MySQL dialect
+persistence setup --provider HIBERNATE --database MYSQL --databaseName flexgae --userName atka --password atka
+
+// Create user entity for storing users and implements springframework.UserDetails interface
+entity --class ~.entity.UserEntity --table user
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username
+field string --fieldName password --notNull --sizeMin 2 --column password
+field number --fieldName age --type java.lang.Integer --notNull --sizeMin 10 --sizeMax 99 --column age
+field boolean --fieldName sex --notNull --column sex
+
+flex setup
+flex remoting scaffold --name ~.service.UserService --entity ~.entity.UserEntity
+
+//security setup
+perform eclipse
+quit
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------
+-- DATABASE CONFIGURATION
+------------------------------------------------------------------------------------------------------------------------------------------
+- Start MySQL database
+	- Create user privilliges with user:atka pass:atka
+	- Create new base database with required collation
+
+- Import as an existing eclipse project
+
+- Change the persistence.xml
+	- <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLInnoDBDialect"/>
+	
+- Add the following lines to web.xml
+	<listener>
+		<listener-class>flex.messaging.HttpFlexSession</listener-class>
+	</listener>
+	
+- Start webcontainer and run webapplication
+
+- Change persistence.xml <property name="hibernate.hbm2ddl.auto" value="update"/>
+ 
+*/

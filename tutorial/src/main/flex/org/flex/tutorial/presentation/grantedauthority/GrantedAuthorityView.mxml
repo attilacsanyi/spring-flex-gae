@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="grantedAuthorityView_creationCompleteHandler(event)" height="100%" title="GrantedAuthority List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.tutorial.domain.auth.GrantedAuthority;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function grantedAuthorityView_creationCompleteHandler(event:FlexEvent):void
+			{
+				grantedAuthorityService.list();
+			}
+			
+			protected function grantedAuthorityView_grantedAuthorityCreateEventHandler(event:GrantedAuthorityEvent):void
+			{
+				grantedAuthorityService.create(event.grantedAuthority);
+				showProgressBar();
+			}
+			
+			protected function grantedAuthorityView_grantedAuthorityUpdateEventHandler(event:GrantedAuthorityEvent):void
+			{
+				grantedAuthorityService.update(event.grantedAuthority);
+				showProgressBar();
+			}
+			
+			private function showForm(grantedAuthority:GrantedAuthority = null):void 
+			{
+				var form:GrantedAuthorityForm = PopUpManager.createPopUp(this, GrantedAuthorityForm, true) as GrantedAuthorityForm;
+				form.remotingChannels = remotingChannels;
+				form.grantedAuthority = grantedAuthority != null ? grantedAuthority : new GrantedAuthority();
+				form.addEventListener(GrantedAuthorityEvent.CREATE, grantedAuthorityView_grantedAuthorityCreateEventHandler);
+				form.addEventListener(GrantedAuthorityEvent.UPDATE, grantedAuthorityView_grantedAuthorityUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function grantedAuthorityService_createResultHandler(event:ResultEvent):void
+			{
+				var createdGrantedAuthority:GrantedAuthority = event.result as GrantedAuthority;
+				var people:ArrayCollection = grantedAuthorityGrid.dataProvider as ArrayCollection;
+				people.addItem(createdGrantedAuthority);
+				closeProgressBar();
+			}
+			
+			protected function grantedAuthorityService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedGrantedAuthority:GrantedAuthority = event.result as GrantedAuthority;
+				var people:ArrayCollection = grantedAuthorityGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var grantedAuthority:GrantedAuthority = people.getItemAt(i) as GrantedAuthority;
+					if (grantedAuthority.id == updatedGrantedAuthority.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedGrantedAuthority, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function grantedAuthorityService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = grantedAuthorityGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(grantedAuthorityGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function grantedAuthorityService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editGrantedAuthorityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (grantedAuthorityGrid.selectedIndex > -1) {
+					var selectedGrantedAuthority:GrantedAuthority = grantedAuthorityGrid.selectedItem as GrantedAuthority;
+					showForm(selectedGrantedAuthority);
+				}
+			}
+
+			protected function deleteGrantedAuthorityBtn_clickHandler(event:MouseEvent):void
+			{
+				if (grantedAuthorityGrid.selectedIndex > -1) {
+					var selectedGrantedAuthority:GrantedAuthority = grantedAuthorityGrid.selectedItem as GrantedAuthority;
+					showProgressBar();
+					grantedAuthorityService.remove(selectedGrantedAuthority.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="grantedAuthorityService" fault="grantedAuthorityService_faultHandler(event)" id="grantedAuthorityService">
+			<s:method name="create" result="grantedAuthorityService_createResultHandler(event)"/>
+			<s:method name="update" result="grantedAuthorityService_updateResultHandler(event)"/>
+			<s:method name="remove" result="grantedAuthorityService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newGrantedAuthorityBtn" label="New GrantedAuthority"/>
+	
+	<mx:DataGrid dataProvider="{grantedAuthorityService.list.lastResult}" height="80%" id="grantedAuthorityGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="authority" headerText="Authority" id="authorityColumn"/>
+            <mx:DataGridColumn dataField="description" headerText="Description" id="descriptionColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editGrantedAuthorityBtn_clickHandler(event)" id="editGrantedAuthorityBtn" label="Edit"/>
+		<s:Button click="deleteGrantedAuthorityBtn_clickHandler(event)" id="deleteGrantedAuthorityBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

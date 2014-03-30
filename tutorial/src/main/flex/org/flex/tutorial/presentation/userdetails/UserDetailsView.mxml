@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="userDetailsView_creationCompleteHandler(event)" height="100%" title="UserDetails List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.tutorial.domain.auth.UserDetails;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function userDetailsView_creationCompleteHandler(event:FlexEvent):void
+			{
+				userDetailsService.list();
+			}
+			
+			protected function userDetailsView_userDetailsCreateEventHandler(event:UserDetailsEvent):void
+			{
+				userDetailsService.create(event.userDetails);
+				showProgressBar();
+			}
+			
+			protected function userDetailsView_userDetailsUpdateEventHandler(event:UserDetailsEvent):void
+			{
+				userDetailsService.update(event.userDetails);
+				showProgressBar();
+			}
+			
+			private function showForm(userDetails:UserDetails = null):void 
+			{
+				var form:UserDetailsForm = PopUpManager.createPopUp(this, UserDetailsForm, true) as UserDetailsForm;
+				form.remotingChannels = remotingChannels;
+				form.userDetails = userDetails != null ? userDetails : new UserDetails();
+				form.addEventListener(UserDetailsEvent.CREATE, userDetailsView_userDetailsCreateEventHandler);
+				form.addEventListener(UserDetailsEvent.UPDATE, userDetailsView_userDetailsUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function userDetailsService_createResultHandler(event:ResultEvent):void
+			{
+				var createdUserDetails:UserDetails = event.result as UserDetails;
+				var people:ArrayCollection = userDetailsGrid.dataProvider as ArrayCollection;
+				people.addItem(createdUserDetails);
+				closeProgressBar();
+			}
+			
+			protected function userDetailsService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedUserDetails:UserDetails = event.result as UserDetails;
+				var people:ArrayCollection = userDetailsGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var userDetails:UserDetails = people.getItemAt(i) as UserDetails;
+					if (userDetails.id == updatedUserDetails.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedUserDetails, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function userDetailsService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = userDetailsGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(userDetailsGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function userDetailsService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editUserDetailsBtn_clickHandler(event:MouseEvent):void
+			{
+				if (userDetailsGrid.selectedIndex > -1) {
+					var selectedUserDetails:UserDetails = userDetailsGrid.selectedItem as UserDetails;
+					showForm(selectedUserDetails);
+				}
+			}
+
+			protected function deleteUserDetailsBtn_clickHandler(event:MouseEvent):void
+			{
+				if (userDetailsGrid.selectedIndex > -1) {
+					var selectedUserDetails:UserDetails = userDetailsGrid.selectedItem as UserDetails;
+					showProgressBar();
+					userDetailsService.remove(selectedUserDetails.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="userDetailsService" fault="userDetailsService_faultHandler(event)" id="userDetailsService">
+			<s:method name="create" result="userDetailsService_createResultHandler(event)"/>
+			<s:method name="update" result="userDetailsService_updateResultHandler(event)"/>
+			<s:method name="remove" result="userDetailsService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newUserDetailsBtn" label="New UserDetails"/>
+	
+	<mx:DataGrid dataProvider="{userDetailsService.list.lastResult}" height="80%" id="userDetailsGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="password" headerText="Password" id="passwordColumn"/>
+            <mx:DataGridColumn dataField="username" headerText="Username" id="usernameColumn"/>
+            <mx:DataGridColumn dataField="accountNonExpired" headerText="Account Non Expired" id="accountNonExpiredColumn"/>
+            <mx:DataGridColumn dataField="accountNonLocked" headerText="Account Non Locked" id="accountNonLockedColumn"/>
+            <mx:DataGridColumn dataField="credentialsNonExpired" headerText="Credentials Non Expired" id="credentialsNonExpiredColumn"/>
+            <mx:DataGridColumn dataField="enabled" headerText="Enabled" id="enabledColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editUserDetailsBtn_clickHandler(event)" id="editUserDetailsBtn" label="Edit"/>
+		<s:Button click="deleteUserDetailsBtn_clickHandler(event)" id="deleteUserDetailsBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

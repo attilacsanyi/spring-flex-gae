@@ -1,0 +1,62 @@
+1. Download Springsource
+http://download.springsource.com/milestone/STS/2.3.3.M1/dist/e3.5/springsource-tool-suite-2.3.3.M1-e3.5.2-win32.zip
+
+Optional Download Spring Roo (STS 2.3.3.M1 contains it)
+http://s3.amazonaws.com/dist.springframework.org/milestone/ROO/spring-roo-1.1.0.M1.zip
+
+2. Download Spring Flex
+http://s3.amazonaws.com/dist.springframework.org/milestone/FLEX/spring-flex-1.5.0.M1-dist.zip
+
+3. Once you have a working Spring Roo installation,
+you can install the Flex Addon by simply copying it from
+spring-flex-1.5.0.M1/dist/org.springframework.flex.roo.addon-1.0.0.M1.jar
+into the $ROO_HOME/bundle directory.
+
+4. Install Flash Builder as a plugin select the sooner installed sts-2.3.3.M1 directory
+
+5. Set environment variables (roo, maven, java)
+
+6. Create rootunes dir into the workspace folder
+- Copy the 'create_rootunes.roo' file into this rootunes directory
+- In the newly created execute the roo command
+- In the roo command execute this: script --name create_rootunes.roo
+- This command create the required projects for you
+
+7. Start STS and import as an existing project
+
+-------
+
+5. Start STS and Create new Roo project with name of rootunes.
+- Set org.examples as the top level package name
+- Check the Add project to working sets checkbox, then click on the 'Select..' button
+- In the dialog box click the 'New...' button and create new Spring-Flex Working set for spring-flex projects
+- Choose the Java working set type and type Spring-Flex in the 'Working set name:' field, then click on 'Finish' button
+- Check the checkboy next to the newly created Spring-Flex working set to add our rootunes project to it, then click 'Next>' and 'Finish'
+- Turn on waving service
+
+6. Choose the newly created 'Spring-Flex' working set in the 'PAckage Explorer'
+- Select the 'rootunes' project and in the 'Roo Shell' view click on the 'Open Roo Shell for projects...'
+- Check in the 'rootunes' project then click OK
+
+7. Execute the following roo commands in the roo console:
+(perform eclipse)
+persistence setup --provider HIBERNATE --database H2_IN_MEMORY
+flex setup
+entity --class ~.domain.Artist
+field string --fieldName name --notNull
+flex remoting all --package ~.service
+field number --type java.lang.Integer --fieldName numberOfMembers --notNull --min 1 --class ~.domain.Artist
+field string --fieldName homeCity --class ~.domain.Artist
+entity --class ~.domain.Album
+field string --fieldName title --notNull
+field date --fieldName releaseDate --type java.util.Date
+// Many to One
+field reference --fieldName artist --type ~.domain.Artist
+flex remoting scaffold --name ~.service.AlbumService
+
+5. Add new Server based on the tomcat-6.0.25.A-SR01 in the SpringSource directory
+springsource-2.3.3.M1\tc-server-developer-2.0.0.SR01\tomcat-6.0.25.A-SR01\
+Set user/pass in the tomcat manager (conf/tomcat-users.xml)
+<role rolename="manager"/>
+<user username="admin" password="admin" roles="manager"/>
+

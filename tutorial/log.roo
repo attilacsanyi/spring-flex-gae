@@ -1,0 +1,30 @@
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2010-11-21 03:03:32
+project --topLevelPackage org.flex.tutorial --projectName tutorial --java 6
+persistence setup --provider HIBERNATE --database MYSQL --databaseName tutorial --userName atka --password atka
+entity --class ~.domain.auth.GrantedAuthority --table granted_authority
+field string --fieldName authority --notNull --sizeMin 4 --column authority --comment "Representation of the granted authority."
+field string --fieldName description --notNull --column description --comment "The grantes authority description."
+entity --class ~.domain.model.UserInfo --table user_info
+field string --fieldName firstname --notNull --sizeMin 2 --sizeMax 20 --column firstname --comment "The first name of the user."
+field string --fieldName lastname --notNull --sizeMin 2 --sizeMax 20 --column lastname --comment "The last name of the user."
+field number --fieldName age --type java.lang.Integer --notNull --sizeMin 1 --sizeMax 100 --column AGE --comment "The age of the user."
+entity --class ~.domain.auth.UserDetails --table user_details
+field set --fieldName authorities --element ~.domain.auth.GrantedAuthority --cardinality ONE_TO_MANY --fetch EAGER --column authorities --comment "Returns the authorities granted to the user."
+field string --fieldName password --notNull --sizeMin 2 --column PASSWORD --comment "Returns the password used to authenticate the user."
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username --comment "Returns the username used to authenticate the user."
+field boolean --fieldName accountNonExpired --notNull --column account_non_expired --comment "Indicates whether the user's account has expired. An expired account cannot be authenticated."
+field boolean --fieldName accountNonLocked --notNull --column account_non_locked --comment "Indicates whether the user is locked or unlocked. A locked user cannot be authenticated."
+field boolean --fieldName credentialsNonExpired --notNull --column credentials_non_expired --comment "Indicates whether the user's credentials (password) has expired. Expired credentials prevent authentication."
+field boolean --fieldName enabled --notNull --column enabled --comment "Indicates whether the user is enabled or disabled. A disabled user cannot be authenticated."
+field reference --fieldName userInfo --type ~.domain.model.UserInfo --cardinality ONE_TO_ONE --fetch LAZY --comment "The user info."
+field reference --class ~.domain.model.UserInfo --fieldName userDetails --type ~.domain.auth.UserDetails --cardinality ONE_TO_ONE --comment "The user."
+flex setup
+flex remoting all --package ~.service.auth
+flex remoting all --package ~.service.model
+security setup
+perform eclipse
+quit
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2010-11-21 03:03:58
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2010-11-21 03:03:58
+// script --file create_tutorial.roo
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2010-11-21 03:03:58

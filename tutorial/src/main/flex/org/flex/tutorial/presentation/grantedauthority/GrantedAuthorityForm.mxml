@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="grantedAuthorityForm_creationCompleteHandler(event)" height="300" title="GrantedAuthority Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import org.flex.tutorial.domain.auth.GrantedAuthority;
+            
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var grantedAuthority:GrantedAuthority;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new GrantedAuthorityEvent(((!grantedAuthority.id || grantedAuthority.id <= 0) ? GrantedAuthorityEvent.CREATE : GrantedAuthorityEvent.UPDATE), grantedAuthority));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                grantedAuthority.authority = authorityInput.text;
+                grantedAuthority.description = descriptionInput.text;
+
+                return true;
+            }
+            
+            protected function grantedAuthorityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="authorityValidator" minLength="4" property="text" required="true" source="{authorityInput}"/>
+            <mx:StringValidator id="descriptionValidator" property="text" required="true" source="{descriptionInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="grantedAuthorityForm">
+        <mx:FormItem id="authorityField" label="Authority">
+        	<s:TextInput id="authorityInput" text="{grantedAuthority.authority}"/>
+        </mx:FormItem>
+        <mx:FormItem id="descriptionField" label="Description">
+        	<s:TextInput id="descriptionInput" text="{grantedAuthority.description}"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

@@ -1,0 +1,23 @@
+<aspectj>
+<aspects>
+<aspect name="org.flex.base.entity.UserInfoEntity_Roo_JavaBean"/>
+<aspect name="org.flex.base.service.UserInfoEntityService_Roo_Service"/>
+<aspect name="org.flex.base.entity.UserInfoEntity_Roo_Serializable"/>
+<aspect name="org.flex.base.entity.UserInfoEntity_Roo_ToString"/>
+<aspect name="org.flex.base.entity.LoginEntity_Roo_JavaBean"/>
+<aspect name="org.flex.base.entity.UserInfoEntity_Roo_Entity"/>
+<aspect name="org.flex.base.entity.LoginEntity_Roo_Configurable"/>
+<aspect name="org.flex.base.service.RoleEntityService_Roo_Service"/>
+<aspect name="org.flex.base.entity.RoleEntity_Roo_Serializable"/>
+<aspect name="org.flex.base.entity.RoleEntity_Roo_JavaBean"/>
+<aspect name="org.flex.base.entity.RoleEntity_Roo_Configurable"/>
+<aspect name="org.flex.base.entity.UserInfoEntity_Roo_Configurable"/>
+<aspect name="org.flex.base.entity.RoleEntity_Roo_ToString"/>
+<aspect name="org.flex.base.entity.LoginEntity_Roo_Entity"/>
+<aspect name="org.flex.base.service.LoginEntityService_Roo_Service"/>
+<aspect name="org.flex.base.entity.RoleEntity_Roo_Entity"/>
+<aspect name="org.flex.base.entity.LoginEntity_Roo_Serializable"/>
+<aspect name="org.flex.base.entity.LoginEntity_Roo_ToString"/>
+</aspects>
+</aspectj>
+

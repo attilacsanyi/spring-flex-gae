@@ -1,0 +1,20 @@
+<aspectj>
+<aspects>
+<aspect name="org.flex.tutorial.service.auth.UserDetailsService_Roo_Service"/>
+<aspect name="org.flex.tutorial.domain.auth.GrantedAuthority_Roo_Configurable"/>
+<aspect name="org.flex.tutorial.domain.auth.GrantedAuthority_Roo_JavaBean"/>
+<aspect name="org.flex.tutorial.domain.model.UserInfo_Roo_JavaBean"/>
+<aspect name="org.flex.tutorial.domain.auth.GrantedAuthority_Roo_Entity"/>
+<aspect name="org.flex.tutorial.domain.auth.UserDetails_Roo_Configurable"/>
+<aspect name="org.flex.tutorial.domain.auth.UserDetails_Roo_Entity"/>
+<aspect name="org.flex.tutorial.service.auth.UserInfoService_Roo_Service"/>
+<aspect name="org.flex.tutorial.domain.model.UserInfo_Roo_Entity"/>
+<aspect name="org.flex.tutorial.service.auth.GrantedAuthorityService_Roo_Service"/>
+<aspect name="org.flex.tutorial.domain.model.UserInfo_Roo_Configurable"/>
+<aspect name="org.flex.tutorial.domain.model.UserInfo_Roo_ToString"/>
+<aspect name="org.flex.tutorial.domain.auth.UserDetails_Roo_JavaBean"/>
+<aspect name="org.flex.tutorial.domain.auth.UserDetails_Roo_ToString"/>
+<aspect name="org.flex.tutorial.domain.auth.GrantedAuthority_Roo_ToString"/>
+</aspects>
+</aspectj>
+

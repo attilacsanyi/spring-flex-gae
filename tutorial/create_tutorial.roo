@@ -1,0 +1,62 @@
+// Create project
+project --topLevelPackage org.flex.tutorial --projectName tutorial --java 6
+
+// Create Hibernate database configuration with MySQL dialect
+persistence setup --provider HIBERNATE --database MYSQL --databaseName tutorial --userName atka --password atka
+
+// Create authority to store the roles
+entity --class ~.domain.auth.GrantedAuthority --table granted_authority
+field string --fieldName authority --notNull --sizeMin 4 --column authority --comment "Representation of the granted authority."
+field string --fieldName description --notNull --column description --comment "The grantes authority description."
+
+// Create user info to store other information from user
+entity --class ~.domain.model.UserInfo --table user_info
+field string --fieldName firstname --notNull --sizeMin 2 --sizeMax 20 --column firstname --comment "The first name of the user."
+field string --fieldName lastname --notNull --sizeMin 2 --sizeMax 20 --column lastname --comment "The last name of the user."
+field number --fieldName age --type java.lang.Integer --notNull --sizeMin 1 --sizeMax 100 --column AGE --comment "The age of the user."
+
+// Create entity for storing user details for login security (use java UserDetail class)
+entity --class ~.domain.auth.UserDetails --table user_details
+field set --fieldName authorities --element ~.domain.auth.GrantedAuthority --cardinality ONE_TO_MANY --fetch EAGER --column authorities --comment "Returns the authorities granted to the user."
+field string --fieldName password --notNull --sizeMin 2 --column PASSWORD --comment "Returns the password used to authenticate the user."
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username --comment "Returns the username used to authenticate the user."
+field boolean --fieldName accountNonExpired --notNull --column account_non_expired --comment "Indicates whether the user's account has expired. An expired account cannot be authenticated."
+field boolean --fieldName accountNonLocked --notNull --column account_non_locked --comment "Indicates whether the user is locked or unlocked. A locked user cannot be authenticated."
+field boolean --fieldName credentialsNonExpired --notNull --column credentials_non_expired --comment "Indicates whether the user's credentials (password) has expired. Expired credentials prevent authentication."
+field boolean --fieldName enabled --notNull --column enabled --comment "Indicates whether the user is enabled or disabled. A disabled user cannot be authenticated."
+field reference --fieldName userInfo --type ~.domain.model.UserInfo --cardinality ONE_TO_ONE --fetch LAZY --comment "The user info."
+field reference --class ~.domain.model.UserInfo --fieldName userDetails --type ~.domain.auth.UserDetails --cardinality ONE_TO_ONE --comment "The user."
+
+flex setup
+flex remoting all --package ~.service.auth
+flex remoting all --package ~.service.model
+
+security setup
+perform eclipse
+quit
+
+/*
+1. Start MySQL database
+	a. Create user privilliges with user:atka pass:atka
+	b. Create new tutorial database with required collation
+
+2. Import as an existing eclipse project
+
+3. Change the persistence.xml
+	a. <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLInnoDBDialect"/>
+	
+4. Add into flex-config.xml
+	<flex:secured/>
+	
+5. Add the following lines to web.xml
+	<listener>
+		<listener-class>flex.messaging.HttpFlexSession</listener-class>
+	</listener>
+
+6. Start application
+
+7. Change persistence.xml
+	a. Change MySqlDialect to MySqlInnoDBDialect
+	b. <property name="hibernate.hbm2ddl.auto" value="update"/>
+ 
+*/

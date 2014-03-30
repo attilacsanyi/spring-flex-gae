@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="userInfoView_creationCompleteHandler(event)" height="100%" title="UserInfo List" width="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ProgressBar;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.ChannelSet;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.flex.tutorial.domain.model.UserInfo;
+			
+			import spark.components.TitleWindow;
+			
+			[Bindable]
+			public var remotingChannels:ChannelSet;
+			
+			private var progressBar:ProgressBar;
+
+			protected function userInfoView_creationCompleteHandler(event:FlexEvent):void
+			{
+				userInfoService.list();
+			}
+			
+			protected function userInfoView_userInfoCreateEventHandler(event:UserInfoEvent):void
+			{
+				userInfoService.create(event.userInfo);
+				showProgressBar();
+			}
+			
+			protected function userInfoView_userInfoUpdateEventHandler(event:UserInfoEvent):void
+			{
+				userInfoService.update(event.userInfo);
+				showProgressBar();
+			}
+			
+			private function showForm(userInfo:UserInfo = null):void 
+			{
+				var form:UserInfoForm = PopUpManager.createPopUp(this, UserInfoForm, true) as UserInfoForm;
+				form.remotingChannels = remotingChannels;
+				form.userInfo = userInfo != null ? userInfo : new UserInfo();
+				form.addEventListener(UserInfoEvent.CREATE, userInfoView_userInfoCreateEventHandler);
+				form.addEventListener(UserInfoEvent.UPDATE, userInfoView_userInfoUpdateEventHandler);
+				PopUpManager.centerPopUp(form);
+			}
+			
+			private function showProgressBar():void {
+				progressBar = PopUpManager.createPopUp(this, ProgressBar, true) as ProgressBar;
+				progressBar.indeterminate = true;
+				progressBar.mode="manual";
+				PopUpManager.centerPopUp(progressBar);
+			}
+			
+			private function closeProgressBar():void {
+				PopUpManager.removePopUp(progressBar);
+			}
+
+			protected function userInfoService_createResultHandler(event:ResultEvent):void
+			{
+				var createdUserInfo:UserInfo = event.result as UserInfo;
+				var people:ArrayCollection = userInfoGrid.dataProvider as ArrayCollection;
+				people.addItem(createdUserInfo);
+				closeProgressBar();
+			}
+			
+			protected function userInfoService_updateResultHandler(event:ResultEvent):void
+			{
+				var updatedUserInfo:UserInfo = event.result as UserInfo;
+				var people:ArrayCollection = userInfoGrid.dataProvider as ArrayCollection;
+				for (var i:int=0; i<people.length; i++) {
+					var userInfo:UserInfo = people.getItemAt(i) as UserInfo;
+					if (userInfo.id == updatedUserInfo.id) {
+						people.removeItemAt(i);
+						people.addItemAt(updatedUserInfo, i);
+					}
+				}
+				closeProgressBar();
+			}
+			
+			protected function userInfoService_removeResultHandler(event:ResultEvent):void
+			{
+				var people:ArrayCollection = userInfoGrid.dataProvider as ArrayCollection;
+				people.removeItemAt(userInfoGrid.selectedIndex);
+				closeProgressBar();
+			}
+
+			protected function userInfoService_faultHandler(event:FaultEvent):void
+			{
+				closeProgressBar();
+				Alert.show(event.fault.faultString, "Remote Operation Failed");
+			}
+
+			protected function editUserInfoBtn_clickHandler(event:MouseEvent):void
+			{
+				if (userInfoGrid.selectedIndex > -1) {
+					var selectedUserInfo:UserInfo = userInfoGrid.selectedItem as UserInfo;
+					showForm(selectedUserInfo);
+				}
+			}
+
+			protected function deleteUserInfoBtn_clickHandler(event:MouseEvent):void
+			{
+				if (userInfoGrid.selectedIndex > -1) {
+					var selectedUserInfo:UserInfo = userInfoGrid.selectedItem as UserInfo;
+					showProgressBar();
+					userInfoService.remove(selectedUserInfo.id);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RemoteObject channelSet="{remotingChannels}" destination="userInfoService" fault="userInfoService_faultHandler(event)" id="userInfoService">
+			<s:method name="create" result="userInfoService_createResultHandler(event)"/>
+			<s:method name="update" result="userInfoService_updateResultHandler(event)"/>
+			<s:method name="remove" result="userInfoService_removeResultHandler(event)"/>
+		</s:RemoteObject>
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<s:Button click="showForm();" id="newUserInfoBtn" label="New UserInfo"/>
+	
+	<mx:DataGrid dataProvider="{userInfoService.list.lastResult}" height="80%" id="userInfoGrid" width="80%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="firstname" headerText="Firstname" id="firstnameColumn"/>
+            <mx:DataGridColumn dataField="lastname" headerText="Lastname" id="lastnameColumn"/>
+            <mx:DataGridColumn dataField="age" headerText="Age" id="ageColumn"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+		<s:Button click="editUserInfoBtn_clickHandler(event)" id="editUserInfoBtn" label="Edit"/>
+		<s:Button click="deleteUserInfoBtn_clickHandler(event)" id="deleteUserInfoBtn" label="Delete"/>
+	</s:Group>
+</s:Panel>

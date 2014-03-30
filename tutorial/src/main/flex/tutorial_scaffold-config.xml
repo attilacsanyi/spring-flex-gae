@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flex-config xmlns="http://www.adobe.com/2006/flex-config">
+	<includes append="true">
+	<symbol>org.flex.tutorial.presentation.userdetails.UserDetailsView</symbol>
+    <symbol>org.flex.tutorial.presentation.userinfo.UserInfoView</symbol>
+    <symbol>org.flex.tutorial.presentation.grantedauthority.GrantedAuthorityView</symbol>
+    </includes>
+</flex-config>

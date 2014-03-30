@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="loginEntityForm_creationCompleteHandler(event)" height="300" title="LoginEntity Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import org.flex.base.entity.LoginEntity;
+            
+            import org.flex.base.entity.UserInfoEntity;
+
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var loginEntity:LoginEntity;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new LoginEntityEvent(((!loginEntity.id || loginEntity.id <= 0) ? LoginEntityEvent.CREATE : LoginEntityEvent.UPDATE), loginEntity));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                loginEntity.password = passwordInput.text;
+                loginEntity.username = usernameInput.text;
+                loginEntity.accountNonExpired = accountNonExpiredInput.selected;
+
+                loginEntity.accountNonLocked = accountNonLockedInput.selected;
+
+                loginEntity.credentialsNonExpired = credentialsNonExpiredInput.selected;
+
+                loginEntity.enabled = enabledInput.selected;
+
+                loginEntity.userInfo = userInfoInput.selectedItem;
+
+                return true;
+            }
+            
+            protected function loginEntityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+                userInfoEntityService.list();
+
+            }
+            
+            protected function userInfoEntityService_faultHandler(event:FaultEvent):void
+            {
+                Alert.show(event.fault.faultString, "Remote Operation Failed");
+            }
+
+            protected function userInfoEntityService_listResultHandler(event:ResultEvent):void
+            {
+                userInfoInput.dataProvider = event.result as ArrayCollection;
+                selectUserInfo();
+            }
+
+            private function selectUserInfo():void {
+            	if (loginEntity.userInfo == null) {
+            		return;
+            	}
+            	for each(var userInfoEntityItem:UserInfoEntity in userInfoInput.dataProvider) {
+            		if (loginEntity.userInfo.id == userInfoEntityItem.id) {
+            			userInfoInput.selectedItem = userInfoEntityItem;
+            			return;
+            		}
+            	}
+            }
+
+
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+    	<s:RemoteObject channelSet="{remotingChannels}" destination="userInfoEntityService" fault="userInfoEntityService_faultHandler(event)" id="userInfoEntityService">
+    	    <s:method name="list" result="userInfoEntityService_listResultHandler(event)"/>
+    	</s:RemoteObject>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="passwordValidator" minLength="2" property="text" required="true" source="{passwordInput}"/>
+            <mx:StringValidator id="usernameValidator" maxLength="20" minLength="2" property="text" required="true" source="{usernameInput}"/>
+            <mx:StringValidator id="accountNonExpiredValidator" property="text" required="true" source="{accountNonExpiredInput}"/>
+            <mx:StringValidator id="accountNonLockedValidator" property="text" required="true" source="{accountNonLockedInput}"/>
+            <mx:StringValidator id="credentialsNonExpiredValidator" property="text" required="true" source="{credentialsNonExpiredInput}"/>
+            <mx:StringValidator id="enabledValidator" property="text" required="true" source="{enabledInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="loginEntityForm">
+        <mx:FormItem id="passwordField" label="Password">
+        	<s:TextInput id="passwordInput" text="{loginEntity.password}"/>
+        </mx:FormItem>
+        <mx:FormItem id="usernameField" label="Username">
+        	<s:TextInput id="usernameInput" text="{loginEntity.username}"/>
+        </mx:FormItem>
+        <mx:FormItem id="accountNonExpiredField" label="Account Non Expired">
+        	<s:CheckBox id="accountNonExpiredInput" selected="{loginEntity.accountNonExpired}"/>
+        </mx:FormItem>
+        <mx:FormItem id="accountNonLockedField" label="Account Non Locked">
+        	<s:CheckBox id="accountNonLockedInput" selected="{loginEntity.accountNonLocked}"/>
+        </mx:FormItem>
+        <mx:FormItem id="credentialsNonExpiredField" label="Credentials Non Expired">
+        	<s:CheckBox id="credentialsNonExpiredInput" selected="{loginEntity.credentialsNonExpired}"/>
+        </mx:FormItem>
+        <mx:FormItem id="enabledField" label="Enabled">
+        	<s:CheckBox id="enabledInput" selected="{loginEntity.enabled}"/>
+        </mx:FormItem>
+        <mx:FormItem id="userInfoField" label="User Info">
+        	<s:DropDownList id="userInfoInput" labelField="firstname"/>	</mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flex-config xmlns="http://www.adobe.com/2006/flex-config">
+	<includes append="true">
+	<symbol>org.flex.base.presentation.roleentity.RoleEntityView</symbol>
+    <symbol>org.flex.base.presentation.userinfoentity.UserInfoEntityView</symbol>
+    <symbol>org.flex.base.presentation.loginentity.LoginEntityView</symbol>
+    </includes>
+</flex-config>

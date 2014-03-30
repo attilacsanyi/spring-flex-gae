@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="roleEntityForm_creationCompleteHandler(event)" height="300" title="RoleEntity Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import org.flex.base.entity.RoleEntity;
+            
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var roleEntity:RoleEntity;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new RoleEntityEvent(((!roleEntity.id || roleEntity.id <= 0) ? RoleEntityEvent.CREATE : RoleEntityEvent.UPDATE), roleEntity));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                roleEntity.name = nameInput.text;
+                roleEntity.description = descriptionInput.text;
+
+                return true;
+            }
+            
+            protected function roleEntityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="nameValidator" minLength="4" property="text" required="true" source="{nameInput}"/>
+            <mx:StringValidator id="descriptionValidator" property="text" required="true" source="{descriptionInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="roleEntityForm">
+        <mx:FormItem id="nameField" label="Name">
+        	<s:TextInput id="nameInput" text="{roleEntity.name}"/>
+        </mx:FormItem>
+        <mx:FormItem id="descriptionField" label="Description">
+        	<s:TextInput id="descriptionInput" text="{roleEntity.description}"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>

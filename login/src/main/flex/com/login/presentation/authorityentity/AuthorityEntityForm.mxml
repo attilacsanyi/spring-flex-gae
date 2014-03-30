@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" close="handleCloseEvent();" creationComplete="authorityEntityForm_creationCompleteHandler(event)" height="300" title="AuthorityEntity Form" width="400">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.messaging.ChannelSet;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import mx.validators.Validator;
+            
+            import com.login.entity.AuthorityEntity;
+            
+            
+            [Bindable]
+            public var remotingChannels:ChannelSet;
+            
+            [Bindable]
+            public var authorityEntity:AuthorityEntity;
+            
+            private function handleCloseEvent():void {
+                PopUpManager.removePopUp(this);
+            }            
+            
+            private function processSave():void {
+                if (!validateAndCommit()){
+                    return;
+                }
+                this.dispatchEvent(new AuthorityEntityEvent(((!authorityEntity.id || authorityEntity.id <= 0) ? AuthorityEntityEvent.CREATE : AuthorityEntityEvent.UPDATE), authorityEntity));
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function validateAndCommit():Boolean{
+                var validatorErrors:Array = Validator.validateAll(validators.source);
+                if (validatorErrors.length > 0){
+                    return false;
+                }
+                authorityEntity.name = nameInput.text;
+                authorityEntity.description = descriptionInput.text;
+
+                return true;
+            }
+            
+            protected function authorityEntityForm_creationCompleteHandler(event:FlexEvent):void
+            {
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <s:ArrayList id="validators">
+            <mx:StringValidator id="nameValidator" minLength="4" property="text" required="true" source="{nameInput}"/>
+            <mx:StringValidator id="descriptionValidator" property="text" required="true" source="{descriptionInput}"/>
+        </s:ArrayList>
+    </fx:Declarations>
+    
+    <s:layout>
+        <s:VerticalLayout/>
+    </s:layout>
+    
+    <mx:Form id="authorityEntityForm">
+        <mx:FormItem id="nameField" label="Name">
+        	<s:TextInput id="nameInput" text="{authorityEntity.name}"/>
+        </mx:FormItem>
+        <mx:FormItem id="descriptionField" label="Description">
+        	<s:TextInput id="descriptionInput" text="{authorityEntity.description}"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:Group>
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+        <s:Button click="processSave();" label="Save"/>
+        <s:Button click="handleCloseEvent();" label="Cancel"/>
+    </s:Group>
+    
+    
+</s:TitleWindow>
